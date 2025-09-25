@@ -19,37 +19,47 @@ def get_master_keyboard(current: int, total: int, master_id: str) -> InlineKeybo
   return InlineKeyboardMarkup(
     inline_keyboard=[
       [
-        InlineKeyboardButton(text="⬅️", callback_data=f"prev:{current}"),
+        InlineKeyboardButton(text="⬅️", callback_data=f"prev_models:{current}"),
         InlineKeyboardButton(text=f"{current+1}/{total}", callback_data="noop"),
-        InlineKeyboardButton(text="➡️", callback_data=f"next:{current}")
+        InlineKeyboardButton(text="➡️", callback_data=f"next_models:{current}")
       ],
+      [
+          InlineKeyboardButton(text="Menu", callback_data="go_home")
+      ]
     ]
   )
 
-@router.message(lambda m: m.text == "📋 List models")
-async def list_models(message: Message):
-    resp = requests.get(f"{API_URL}/masters/")
+@router.callback_query(F.data.startswith("show_models"))
+async def list_models(callback: CallbackQuery):
+    print("SHOW MODELS")
+    _, category = callback.data.split(":")
+    url = f"{API_URL}/{'top' if category == 'top' else 'regular'}/"
+
+    resp = requests.get(url)
     resp.raise_for_status()
     global models_cache
     models_cache = resp.json()
 
     if not models_cache:
-        await message.answer("📭 No models found")
+        await callback.message.answer("📭 No models found")
+        await callback.answer()
         return
 
     current = 0
     m = models_cache[current]
 
-    text = format_master(models_cache[current])
+    text = format_master(m)
     kb = get_master_keyboard(current, len(models_cache), m.get("id"))
 
     if m.get("main_photo"):
-      photo = await preload_image(m, API_URL)
-      await message.answer_photo(photo, caption=text, reply_markup=kb)
+        photo = await preload_image(m, API_URL)
+        await callback.message.answer_photo(photo, caption=text, reply_markup=kb)
     else:
-      await message.answer(text, reply_markup=kb)
+        await callback.message.answer(text, reply_markup=kb)
 
-@router.callback_query(F.data.startswith("prev"))
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("prev_models"))
 async def prev_master(callback: CallbackQuery):
     _, current = callback.data.split(":")
     current = int(current)
@@ -63,7 +73,7 @@ async def prev_master(callback: CallbackQuery):
     await update_master_message(callback, m, text, kb, new_index)
 
 # Перелистывание вперёд
-@router.callback_query(F.data.startswith("next"))
+@router.callback_query(F.data.startswith("next_models"))
 async def next_master(callback: CallbackQuery):
     _, current = callback.data.split(":")
     current = int(current)

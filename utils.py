@@ -1,5 +1,12 @@
 import requests, tempfile
 from aiogram.types import FSInputFile
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+API_URL = os.getenv("API_URL")
 
 def format_master(m: dict) -> str:
   return (
@@ -15,6 +22,37 @@ def format_master(m: dict) -> str:
     f"   Full day: {m['price_full_day']} $\n\n"
     f"📲 Call: {m['phonenumber']}"
   )
+
+def format_agencyspa(a: dict) -> str:
+  return (
+    f"🏢 <b>{a.get('name')}</b>\n"
+    f"📍 Address: {a.get('address', 'N/A')}\n"
+    f"📞 Phone: {a.get('phone', 'N/A')}\n"
+  )
+
+def get_masters_keyboard(index: int, total: int, agency_id: str, prev_name, next_name) -> InlineKeyboardMarkup:
+  return InlineKeyboardMarkup(inline_keyboard=[
+      [
+          InlineKeyboardButton(text="⬅️", callback_data=f"{prev_name}:{index}"),
+          InlineKeyboardButton(text=f"{index+1}/{total}", callback_data="noop"),
+          InlineKeyboardButton(text="➡️", callback_data=f"{next_name}:{index}")
+      ],
+      [
+          InlineKeyboardButton(text="Menu", callback_data="go_home")
+      ]
+  ])
+
+async def send_master_carousel(message, masters, state, index=0, prev_name="prev", next_name="next"):
+    m = masters[index]
+    text = format_master(m)
+    
+    kb = get_masters_keyboard(index, len(masters), m.get("id"), prev_name, next_name)
+
+    if m.get("main_photo"):
+        photo = await preload_image(m, API_URL)
+        await message.answer_photo(photo, caption=text, reply_markup=kb)
+    else:
+        await message.answer(text, reply_markup=kb)
 
 async def preload_image(m, API_URL) :
   if m.get("main_photo"):

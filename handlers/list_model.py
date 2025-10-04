@@ -1,12 +1,9 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, InputMediaPhoto, FSInputFile
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import requests, tempfile
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+import requests
 from dotenv import load_dotenv
 import os
-import tempfile
-from utils import format_master, preload_image
+from utils import format_master, get_masters_keyboard, preload_image
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -15,19 +12,19 @@ API_URL = os.getenv("API_URL")
 router = Router()
 models_cache = []
 
-def get_master_keyboard(current: int, total: int, master_id: str) -> InlineKeyboardMarkup:
-  return InlineKeyboardMarkup(
-    inline_keyboard=[
-      [
-        InlineKeyboardButton(text="⬅️", callback_data=f"prev_models:{current}"),
-        InlineKeyboardButton(text=f"{current+1}/{total}", callback_data="noop"),
-        InlineKeyboardButton(text="➡️", callback_data=f"next_models:{current}")
-      ],
-      [
-          InlineKeyboardButton(text="Menu", callback_data="go_home")
-      ]
-    ]
-  )
+# def get_master_keyboard(current: int, total: int, master_id: str) -> InlineKeyboardMarkup:
+#   return InlineKeyboardMarkup(
+#     inline_keyboard=[
+#       [
+#         InlineKeyboardButton(text="⬅️", callback_data=f"prev_models:{current}"),
+#         InlineKeyboardButton(text=f"{current+1}/{total}", callback_data="noop"),
+#         InlineKeyboardButton(text="➡️", callback_data=f"next_models:{current}")
+#       ],
+#       [
+#           InlineKeyboardButton(text="Menu", callback_data="go_home")
+#       ]
+#     ]
+#   )
 
 @router.callback_query(F.data.startswith("show_models"))
 async def list_models(callback: CallbackQuery):
@@ -49,9 +46,9 @@ async def list_models(callback: CallbackQuery):
     m = models_cache[current]
 
     text = format_master(m)
-    kb = get_master_keyboard(current, len(models_cache), m.get("id"))
+    kb = get_masters_keyboard(current, len(models_cache), m.get("id"), prev_name="prev_models", next_name="next_models")
 
-    if m.get("main_photo"):
+    if m.get("photos"):
         photo = await preload_image(m, API_URL)
         await callback.message.answer_photo(photo, caption=text, reply_markup=kb)
     else:
@@ -68,7 +65,7 @@ async def prev_master(callback: CallbackQuery):
     new_index = (current - 1) % total
     m = models_cache[new_index]
     text = format_master(m)
-    kb = get_master_keyboard(new_index, total, m.get("id"))
+    kb = get_masters_keyboard(new_index, total, m.get("id"), prev_name="prev_models", next_name="next_models")
 
     await update_master_message(callback, m, text, kb, new_index)
 
@@ -82,12 +79,12 @@ async def next_master(callback: CallbackQuery):
     new_index = (current + 1) % total
     m = models_cache[new_index]
     text = format_master(m)
-    kb = get_master_keyboard(new_index, total, m.get("id"))
+    kb = get_masters_keyboard(new_index, total, m.get("id"), prev_name="prev_models", next_name="next_models")
 
     await update_master_message(callback, m, text, kb, new_index)
 
 async def update_master_message(callback: CallbackQuery, m, text, kb, new_index):
-    if m.get("main_photo"):
+    if m.get("photos"):
       photo = await preload_image(m, API_URL)
       media = InputMediaPhoto(media=photo, caption=text)
       await callback.message.edit_media(media=media, reply_markup=kb)

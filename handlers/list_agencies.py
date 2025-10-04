@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery, InputMediaPhoto, FSInputFile
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests, tempfile
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import WebAppInfo
 from dotenv import load_dotenv
 from aiogram.fsm.context import FSMContext
 import os
@@ -12,6 +12,7 @@ from utils import format_agencyspa, format_master, get_masters_keyboard, preload
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 API_URL = os.getenv("API_URL")
+API_URL_HTTPS = os.getenv("API_URL_HTTPS")
 
 router = Router()
 models_cache = []
@@ -19,6 +20,10 @@ models_cache = []
 def get_agencyspa_keyboard(current: int, total: int, agency_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
+            [InlineKeyboardButton(
+                text="📷 Show Photos",
+                web_app=WebAppInfo(url=f"{API_URL_HTTPS}/agencies_view/{agency_id}")
+            )],
             [
                 InlineKeyboardButton(text="⬅️", callback_data=f"prev_agency:{current}"),
                 InlineKeyboardButton(text=f"{current+1}/{total}", callback_data="noop"),
@@ -82,7 +87,7 @@ async def next_master(callback: CallbackQuery):
     await update_master_message(callback, m, text, kb, new_index)
 
 async def update_master_message(callback: CallbackQuery, m, text, kb, new_index):
-    if m.get("main_photo"):
+    if m.get("photos"):
       photo = await preload_image(m, API_URL)
       media = InputMediaPhoto(media=photo, caption=text)
       await callback.message.edit_media(media=media, reply_markup=kb)
@@ -137,8 +142,7 @@ async def list_agencyspa(callback: CallbackQuery):
     kb = get_agencyspa_keyboard(current, len(agencies_cache), a.get("id"))
 
     if a.get("photos") and len(a["photos"]) > 0:
-        photo_url = a["photos"][0] 
-        photo = await preload_image({"main_photo": photo_url}, API_URL)
+        photo = await preload_image(a, API_URL)
         await callback.message.answer_photo(photo, caption=text, reply_markup=kb)
     else:
         await callback.message.answer(text, reply_markup=kb)
@@ -176,8 +180,7 @@ async def next_agency(callback: CallbackQuery):
 
 async def update_agencyspa_message(callback: CallbackQuery, a, text, kb):
     if a.get("photos") and len(a["photos"]) > 0:
-        photo_url = a["photos"][0]
-        photo = await preload_image({"main_photo": photo_url}, API_URL)
+        photo = await preload_image(a, API_URL)
         media = InputMediaPhoto(media=photo, caption=text)
         await callback.message.edit_media(media=media, reply_markup=kb)
     else:

@@ -6,17 +6,14 @@ import os
 
 import tempfile
 
+from dotenv import load_dotenv
+
 router = Router()
+load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+WORK_WITH_US_LINK = os.getenv("WORK_WITH_US_LINK")
 
-# --- Главное меню ---
-main_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Start"),],
-    ],
-    resize_keyboard=True
-)
 def get_main_menu():
   return InlineKeyboardMarkup(
       inline_keyboard=[
@@ -32,7 +29,7 @@ def get_main_menu():
               InlineKeyboardButton(text="Search by parameters", callback_data="search_post"),
           ],
           [
-              InlineKeyboardButton(text="Work with us", callback_data="work"),
+              InlineKeyboardButton(text="Work with us", url=f"{WORK_WITH_US_LINK}"),
           ],
       ]
   )

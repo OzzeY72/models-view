@@ -1,5 +1,6 @@
+from dotenv import load_dotenv
 from aiogram import Router, F
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery
 import os
@@ -10,6 +11,10 @@ from dotenv import load_dotenv
 
 router = Router()
 load_dotenv()
+
+load_dotenv()
+API_URL_HTTPS = os.getenv("API_URL_HTTPS")
+API_KEY = os.getenv("API_KEY")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WORK_WITH_US_LINK = os.getenv("WORK_WITH_US_LINK")

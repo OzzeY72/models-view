@@ -82,7 +82,7 @@ async def next_master(callback: CallbackQuery):
     await update_master_message(callback, m, text, kb, new_index)
 
 async def update_master_message(callback: CallbackQuery, m, text, kb, new_index):
-    if m.get("main_photo"):
+    if m.get("photos"):
       photo = await preload_image(m, API_URL)
       media = InputMediaPhoto(media=photo, caption=text)
       await callback.message.edit_media(media=media, reply_markup=kb)
@@ -137,8 +137,7 @@ async def list_agencyspa(callback: CallbackQuery):
     kb = get_agencyspa_keyboard(current, len(agencies_cache), a.get("id"))
 
     if a.get("photos") and len(a["photos"]) > 0:
-        photo_url = a["photos"][0] 
-        photo = await preload_image({"main_photo": photo_url}, API_URL)
+        photo = await preload_image(a, API_URL)
         await callback.message.answer_photo(photo, caption=text, reply_markup=kb)
     else:
         await callback.message.answer(text, reply_markup=kb)
@@ -176,8 +175,7 @@ async def next_agency(callback: CallbackQuery):
 
 async def update_agencyspa_message(callback: CallbackQuery, a, text, kb):
     if a.get("photos") and len(a["photos"]) > 0:
-        photo_url = a["photos"][0]
-        photo = await preload_image({"main_photo": photo_url}, API_URL)
+        photo = await preload_image(a, API_URL)
         media = InputMediaPhoto(media=photo, caption=text)
         await callback.message.edit_media(media=media, reply_markup=kb)
     else:

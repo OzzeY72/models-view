@@ -1,5 +1,6 @@
+from dotenv import load_dotenv
 from aiogram import Router, F
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery
 import os
@@ -8,32 +9,32 @@ import tempfile
 
 router = Router()
 
+load_dotenv()
+API_URL_HTTPS = os.getenv("API_URL_HTTPS")
+API_KEY = os.getenv("API_KEY")
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# --- Главное меню ---
-main_menu = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="Start"),],
-    ],
-    resize_keyboard=True
-)
 def get_main_menu():
   return InlineKeyboardMarkup(
       inline_keyboard=[
+          # [
+          #     InlineKeyboardButton(text="Top Escort", callback_data="show_models:top"),
+          #     InlineKeyboardButton(text="Escort", callback_data="show_models:regular"),
+          # ],
+          # [
+          #     InlineKeyboardButton(text="Agencies", callback_data="show_agencyspa:agencies"),
+          #     InlineKeyboardButton(text="SPA", callback_data="show_agencyspa:spa"),
+          # ],
           [
-              InlineKeyboardButton(text="Top Escort", callback_data="show_models:top"),
-              InlineKeyboardButton(text="Escort", callback_data="show_models:regular"),
-          ],
-          [
-              InlineKeyboardButton(text="Agencies", callback_data="show_agencyspa:agencies"),
-              InlineKeyboardButton(text="SPA", callback_data="show_agencyspa:spa"),
-          ],
-          [
-              InlineKeyboardButton(text="Search by parameters", callback_data="search_post"),
-          ],
-          [
-              InlineKeyboardButton(text="Work with us", callback_data="work"),
-          ],
+            InlineKeyboardButton(
+                    text="Work with us",
+                    web_app=WebAppInfo(url=f"{API_URL_HTTPS}/static/miniapp/index.html")
+                )
+          ]
+          # [
+          #     InlineKeyboardButton(text="Work with us", callback_data="work"),
+          # ],
       ]
   )
 

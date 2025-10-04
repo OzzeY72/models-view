@@ -1,6 +1,5 @@
 import requests, tempfile
-from aiogram.types import FSInputFile
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo, FSInputFile
 from dotenv import load_dotenv
 import os
 
@@ -15,7 +14,7 @@ def format_master(m: dict) -> str:
     f"🏠 Address: {m['address']}\n\n"
     f"📐 Parameters:\n"
     f"   Height: {m['height']} cm | Weight: {m['weight']} kg\n"
-    f"   Cup: {m['cupsize']} | Cloth size: {m['clothsize']}\n\n"
+    f"   Cup: {m['cupsize']} | Body type: {m['bodytype']}\n\n"
     f"💰 Prices:\n"
     f"   1 hour: {m['price_1h']} $\n"
     f"   2 hours: {m['price_2h']} $\n"
@@ -30,8 +29,12 @@ def format_agencyspa(a: dict) -> str:
     f"📞 Phone: {a.get('phone', 'N/A')}\n"
   )
 
-def get_masters_keyboard(index: int, total: int, agency_id: str, prev_name, next_name) -> InlineKeyboardMarkup:
+def get_masters_keyboard(index: int, total: int, master_id: str, prev_name, next_name) -> InlineKeyboardMarkup:
   return InlineKeyboardMarkup(inline_keyboard=[
+      [InlineKeyboardButton(
+          text="📷 Show Photos",
+          web_app=WebAppInfo(url=f"https://2e317161ae9f.ngrok-free.app/masters_view/{master_id}")
+      )],
       [
           InlineKeyboardButton(text="⬅️", callback_data=f"{prev_name}:{index}"),
           InlineKeyboardButton(text=f"{index+1}/{total}", callback_data="noop"),
@@ -48,16 +51,16 @@ async def send_master_carousel(message, masters, state, index=0, prev_name="prev
     
     kb = get_masters_keyboard(index, len(masters), m.get("id"), prev_name, next_name)
 
-    if m.get("main_photo"):
+    if m.get("photos"):
         photo = await preload_image(m, API_URL)
         await message.answer_photo(photo, caption=text, reply_markup=kb)
     else:
         await message.answer(text, reply_markup=kb)
 
 async def preload_image(m, API_URL) :
-  if m.get("main_photo"):
+  if m.get("photos"):
     try:
-      photo_resp = requests.get(f"{API_URL}/static/{m['main_photo']}", stream=True)
+      photo_resp = requests.get(f"{API_URL}/static/{m['photos'][0]}", stream=True)
       photo_resp.raise_for_status()
 
       if "image" not in photo_resp.headers.get("content-type", ""):

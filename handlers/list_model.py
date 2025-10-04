@@ -51,7 +51,7 @@ async def list_models(callback: CallbackQuery):
     text = format_master(m)
     kb = get_master_keyboard(current, len(models_cache), m.get("id"))
 
-    if m.get("main_photo"):
+    if m.get("photos"):
         photo = await preload_image(m, API_URL)
         await callback.message.answer_photo(photo, caption=text, reply_markup=kb)
     else:
@@ -87,7 +87,7 @@ async def next_master(callback: CallbackQuery):
     await update_master_message(callback, m, text, kb, new_index)
 
 async def update_master_message(callback: CallbackQuery, m, text, kb, new_index):
-    if m.get("main_photo"):
+    if m.get("photos"):
       photo = await preload_image(m, API_URL)
       media = InputMediaPhoto(media=photo, caption=text)
       await callback.message.edit_media(media=media, reply_markup=kb)

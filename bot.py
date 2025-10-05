@@ -11,7 +11,6 @@ from handlers.list_model import router as list_masters_router
 from handlers.list_agencies import router as list_agencies_router
 from handlers.application import router as application_router
 from handlers.start import router as start_router
-from handlers.work_with_us import router as work_with_us_router
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -23,9 +22,9 @@ bot = Bot(
 dp = Dispatcher(storage=MemoryStorage())
 dp.include_router(start_router)
 dp.include_router(work_with_us_router)
-# dp.include_router(list_masters_router)
-# dp.include_router(list_agencies_router)
-# dp.include_router(application_router)
+dp.include_router(list_masters_router)
+dp.include_router(list_agencies_router)
+dp.include_router(application_router)
 
 if __name__ == "__main__":
   asyncio.run(dp.start_polling(bot))
